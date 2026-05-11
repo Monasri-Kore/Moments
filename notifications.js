@@ -1,7 +1,7 @@
 // routes/notifications.js — Activity feed / notifications
 const express = require('express');
 const router = express.Router();
-const { run, all, get } = require('../db');
+const { run, all, get } = require('./db');
 const authMiddleware = require('../middleware/auth');
 
 router.use(authMiddleware);
