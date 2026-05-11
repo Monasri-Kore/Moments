@@ -5,7 +5,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
-const { run, get, all } = require('../db');
+const { run, get, all } = require('./db');
 const authMiddleware = require('../middleware/auth');
 
 router.use(authMiddleware);
