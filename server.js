@@ -1,76 +1,41 @@
-// server.js — Moments Backend Entry Point
 require('dotenv').config();
-
-const express    = require('express');
-const cors       = require('cors');
-const path       = require('path');
+const express = require('express');
+const cors    = require('cors');
+const path    = require('path');
+const fs      = require('fs');
 const { initDB } = require('./db');
-
-const authRoutes          = require('./routes/auth');
-const albumRoutes         = require('./routes/albums');
-const mediaRoutes         = require('./routes/media');
-const friendRoutes        = require('./routes/friends');
-const notificationRoutes  = require('./routes/notifications');
+const { router: authRouter } = require('./auth');
+const albumsRouter        = require('./albums');
+const mediaRouter         = require('./media');
+const friendsRouter       = require('./friends');
+const notificationsRouter = require('./notifications');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-// ── Middleware ──────────────────────────────────────────────────
-app.use(cors({
-  origin: '*',   // In production: set to your frontend URL
-  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
+app.use(cors({ origin:'*', methods:['GET','POST','PATCH','DELETE'], allowedHeaders:['Content-Type','Authorization'] }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve uploaded files statically
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+app.use('/uploads', express.static(uploadDir));
+app.use(express.static(__dirname));
 
-// Serve frontend (if placed in a "public" folder next to server.js)
-app.use(express.static(path.join(__dirname, 'public')));
+app.use('/api/auth',          authRouter);
+app.use('/api/albums',        albumsRouter);
+app.use('/api/media',         mediaRouter);
+app.use('/api/friends',       friendsRouter);
+app.use('/api/notifications', notificationsRouter);
 
-// ── API Routes ──────────────────────────────────────────────────
-app.use('/api/auth',          authRoutes);
-app.use('/api/albums',        albumRoutes);
-app.use('/api/media',         mediaRoutes);
-app.use('/api/friends',       friendRoutes);
-app.use('/api/notifications', notificationRoutes);
-
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Moments backend is running 🎉', time: new Date().toISOString() });
-});
-
-// Catch-all: serve frontend for any unknown route (SPA support)
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 app.get('*', (req, res) => {
-  const frontendPath = path.join(__dirname, 'public', 'index.html');
-  const fs = require('fs');
-  if (fs.existsSync(frontendPath)) {
-    res.sendFile(frontendPath);
-  } else {
-    res.status(404).json({ error: 'Route not found.' });
-  }
+  const f = path.join(__dirname, 'index.html');
+  fs.existsSync(f) ? res.sendFile(f) : res.status(404).json({ error: 'Not found.' });
 });
 
-// ── Error handler ───────────────────────────────────────────────
-app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Something went wrong on the server.' });
-});
-
-// ── Start ───────────────────────────────────────────────────────
 async function start() {
-  await initDB();   // Create DB tables if they don't exist
-  app.listen(PORT, () => {
-    console.log(`\n🚀 Moments backend running at http://localhost:${PORT}`);
-    console.log(`📁 Uploads stored in: ./uploads`);
-    console.log(`🔑 JWT secret loaded: ${process.env.JWT_SECRET ? 'yes' : 'NO — check your .env!'}\n`);
-  });
+  await initDB();
+  app.listen(PORT, () => console.log(`🚀 Running on port ${PORT}`));
 }
-
-start().catch(err => {
-  console.error('Failed to start server:', err);
-  process.exit(1);
-});
+start().catch(e => { console.error(e); process.exit(1); });
