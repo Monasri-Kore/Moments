@@ -289,15 +289,15 @@
 
   <div class="stats-row">
     <div class="stat-card">
-      <div class="num">38</div>
+      <div class="num" id="stat-photos">0</div>
       <div class="lbl">Photos uploaded</div>
     </div>
     <div class="stat-card">
-      <div class="num">6</div>
+      <div class="num" id="stat-albums">0</div>
       <div class="lbl">Albums shared</div>
     </div>
     <div class="stat-card">
-      <div class="num">11</div>
+      <div class="num" id="stat-friends">0</div>
       <div class="lbl">Friends connected</div>
     </div>
   </div>
@@ -330,9 +330,9 @@
   </div>
 
   <div class="tabs">
-    <div class="tab active">All albums</div>
-    <div class="tab">My uploads</div>
-    <div class="tab">Shared with me</div>
+    <div class="tab active" data-tab="all">All albums</div>
+    <div class="tab" data-tab="mine">My uploads</div>
+    <div class="tab" data-tab="shared">Shared with me</div>
   </div>
 
   <div class="section">
@@ -458,12 +458,12 @@
       <div id="profile-email" style="font-size:14px;color:var(--text2);margin-top:2px;">…</div>
       <div id="profile-college" style="font-size:13px;color:var(--text3);margin-top:2px;">…</div>
       <div style="margin-top:10px;display:flex;gap:8px;">
-        <span class="badge badge-purple">38 photos</span>
-        <span class="badge badge-purple">6 albums</span>
-        <span class="badge badge-purple">11 friends</span>
+        <span class="badge badge-purple" id="badge-photos">0 photos</span>
+        <span class="badge badge-purple" id="badge-albums">0 albums</span>
+        <span class="badge badge-purple" id="badge-friends">0 friends</span>
       </div>
     </div>
-    <a class="btn btn-ghost" href="#" style="font-size:13px;padding:7px 14px;">Edit profile</a>
+    <a class="btn btn-ghost" href="#" onclick="showEditProfileModal()" style="font-size:13px;padding:7px 14px;">Edit profile</a>
   </div>
 
   <div class="settings-section">
@@ -478,7 +478,7 @@
 
   <div class="settings-section">
     <h3>Account</h3>
-    <div class="setting-row">
+    <div class="setting-row" onclick="showEditProfileModal()">
       <span>Edit profile</span>
       <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
@@ -553,3 +553,4 @@
 <script src="app.js"></script>
 </body>
 </html>
+
