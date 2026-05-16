@@ -123,7 +123,7 @@
     Moments <span class="dot"></span>
   </a>
   <div class="nav-links" id="main-nav">
-    <a href="#" onclick="go('page-landing')">Home</a>
+    <a href="#" data-page="page-dashboard" data-auth onclick="go(getToken()?'page-dashboard':'page-landing')">Home</a>
     <a href="#" data-page="page-dashboard" data-auth onclick="go('page-dashboard')">Dashboard</a>
     <a href="#" data-page="page-albums" data-auth onclick="go('page-albums')">Albums</a>
     <a href="#" data-page="page-upload" data-auth onclick="go('page-upload')">Upload</a>
@@ -302,19 +302,21 @@
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-head">
-      <h2>Your albums</h2>
-      <a class="btn btn-ghost" href="#" onclick="go('page-albums')" style="font-size:13px;padding:7px 14px;">See all →</a>
+  <div style="display:grid;grid-template-columns:1fr 320px;gap:0;align-items:start;">
+    <!-- FEED (Instagram style) -->
+    <div style="padding:20px 24px;border-right:1px solid var(--border);">
+      <div style="font-size:16px;font-weight:600;margin-bottom:16px;">Friends Feed</div>
+      <div id="home-feed"><p style="color:var(--text3);font-size:14px;">Loading feed…</p></div>
     </div>
-    <div class="album-grid" id="dashboard-album-grid"><div style="color:var(--text3);font-size:14px;">Loading albums…</div></div>
-  </div>
-
-  <div class="divider"></div>
-
-  <div class="section">
-    <div class="section-head"><h2>Recent activity</h2></div>
-    <div id="dashboard-feed"><p style="color:var(--text3);font-size:14px;">Loading…</p></div>
+    <!-- SIDEBAR -->
+    <div style="padding:20px 20px;position:sticky;top:64px;">
+      <div style="font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">Quick links</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <a class="btn btn-primary" href="#" onclick="go('page-upload')" style="justify-content:center;font-size:13px;">📸 Upload photos</a>
+        <a class="btn btn-outline" href="#" onclick="go('page-albums')" style="justify-content:center;font-size:13px;">📁 My albums</a>
+        <a class="btn btn-ghost" href="#" onclick="go('page-friends')" style="justify-content:center;font-size:13px;">👥 Find friends</a>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -346,16 +348,7 @@
 
   <div class="section">
     <div class="section-head"><h2>Recent photos</h2></div>
-    <div class="photo-grid">
-      <div class="photo-cell" style="background:linear-gradient(135deg,#EEEDFE,#A29BFE);">🌄</div>
-      <div class="photo-cell" style="background:linear-gradient(135deg,#E1F5EE,#55EFC4);">🤝</div>
-      <div class="photo-cell" style="background:linear-gradient(135deg,#FAEEDA,#FAC775);">🎂</div>
-      <div class="photo-cell" style="background:linear-gradient(135deg,#FAECE7,#FF7675);">🌸</div>
-      <div class="photo-cell" style="background:linear-gradient(135deg,#E6F1FB,#74B9FF);">🎓</div>
-      <div class="photo-cell" style="background:linear-gradient(135deg,#FBEAF0,#FD79A8);">🎵</div>
-      <div class="photo-cell" style="background:linear-gradient(135deg,#EEEDFE,#6C5CE7);">🏆</div>
-      <div class="photo-cell" style="background:linear-gradient(135deg,#E1F5EE,#00B894);">🌿</div>
-    </div>
+    <div id="recent-photos-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;"><p style="color:var(--text3);font-size:14px;">Loading…</p></div>
   </div>
 </div>
 
@@ -408,7 +401,10 @@
 
       <div class="form-group">
         <label>Caption (optional)</label>
-        <input type="text" id="upload-caption" placeholder="What's the story behind these moments?">
+        <div style="position:relative;">
+          <input type="text" id="upload-caption" placeholder="What's the story? Type @ to tag friends…" oninput="handleCaptionInput(event)" autocomplete="off">
+          <div id="tag-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:10px;z-index:50;max-height:200px;overflow-y:auto;box-shadow:var(--shadow-lg);"></div>
+        </div>
       </div>
 
       <div class="form-group">
@@ -458,13 +454,25 @@
       <div id="profile-email" style="font-size:14px;color:var(--text2);margin-top:2px;">…</div>
       <div id="profile-college" style="font-size:13px;color:var(--text3);margin-top:2px;">…</div>
       <div style="margin-top:10px;display:flex;gap:8px;">
-        <span class="badge badge-purple" id="badge-photos">0 photos</span>
-        <span class="badge badge-purple" id="badge-albums">0 albums</span>
-        <span class="badge badge-purple" id="badge-friends">0 friends</span>
+        <span class="badge badge-purple" id="badge-photos" onclick="openProfileTab('photos')" style="cursor:pointer;">0 photos</span>
+        <span class="badge badge-purple" id="badge-albums" onclick="openProfileTab('albums')" style="cursor:pointer;">0 albums</span>
+        <span class="badge badge-purple" id="badge-friends" onclick="openProfileTab('friends')" style="cursor:pointer;">0 friends</span>
       </div>
     </div>
-    <a class="btn btn-ghost" href="#" onclick="showEditProfileModal()" style="font-size:13px;padding:7px 14px;">Edit profile</a>
+    <a class="btn btn-ghost" href="#" onclick="showEditProfileModal()" style="font-size:13px;padding:7px 14px;">✏️ Edit profile</a>
   </div>
+
+  <!-- Profile tabs -->
+  <div style="display:flex;gap:6px;padding:16px 32px 0;border-bottom:1px solid var(--border);">
+    <button class="profile-tab-btn tab active" data-tab="photos" onclick="openProfileTab('photos')" style="font-size:13px;">📸 Photos</button>
+    <button class="profile-tab-btn tab" data-tab="albums" onclick="openProfileTab('albums')" style="font-size:13px;">📁 Albums</button>
+    <button class="profile-tab-btn tab" data-tab="friends" onclick="openProfileTab('friends')" style="font-size:13px;">👥 Friends</button>
+  </div>
+  <div id="profile-tab-content" style="padding:16px 32px;min-height:120px;">
+    <p style="color:var(--text3);font-size:14px;">Click a tab above to view your photos, albums, or friends.</p>
+  </div>
+
+  <div class="divider"></div>
 
   <div class="settings-section">
     <h3>Storage</h3>
@@ -479,19 +487,19 @@
   <div class="settings-section">
     <h3>Account</h3>
     <div class="setting-row" onclick="showEditProfileModal()">
-      <span>Edit profile</span>
+      <span>✏️ Edit profile</span>
       <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="setting-row">
-      <span>Change password</span>
+    <div class="setting-row" onclick="showChangePasswordModal()">
+      <span>🔒 Change password</span>
       <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="setting-row">
-      <span>Notification preferences</span>
+    <div class="setting-row" onclick="showNotificationsModal()">
+      <span>🔔 Notification preferences</span>
       <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="setting-row">
-      <span>Privacy and visibility</span>
+    <div class="setting-row" onclick="showPrivacyModal()">
+      <span>🔐 Privacy and visibility</span>
       <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
   </div>
@@ -500,8 +508,8 @@
 
   <div class="settings-section">
     <h3>Data</h3>
-    <div class="setting-row">
-      <span>Download all my data</span>
+    <div class="setting-row" onclick="showDownloadDataModal()">
+      <span>📦 Download all my data</span>
       <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     <div class="setting-row danger" onclick="handleLogout()">
@@ -553,4 +561,3 @@
 <script src="app.js"></script>
 </body>
 </html>
-
